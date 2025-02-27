@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+  <h1>테스트</h1>
+    <script>
+        function getEnIv() {
+            return new Uint8Array(16);
+          }
+          
+          async function Decode(str, key) {
+            const en_iv = getEnIv();
+            const en_key = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(key));
+            const truncatedKey = await crypto.subtle.importKey(
+              'raw',
+              en_key.slice(0, 32),
+              { name: 'AES-CBC' },
+              false,
+              ['decrypt']
+            );
+          
+            const decodedBase64 = atob(str);
+            const data = new Uint8Array([...decodedBase64].map(char => char.charCodeAt(0)));
+          
+            const decrypted = await crypto.subtle.decrypt(
+              { name: 'AES-CBC', iv: en_iv },
+              truncatedKey,
+              data
+            );
+          
+            return new TextDecoder().decode(decrypted);
+          }
+          
+          // 예시 사용
+          async function example() {
+            const encryptedText = 'adfa324341';
+            const encryptionKey = 'af';
+          
+            const decryptedText = await Decode(encryptedText, encryptionKey);
+            console.log('Decrypted text:', decryptedText);
+          }
+          
+          example();
+    </script>
+</body>
+</html>
